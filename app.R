@@ -78,7 +78,7 @@ server <- function(input, output) {
     sample_text <- paste0("# of samples per experiment: ", input$n_samples)
     subtitle_text <- sample_text
     if (show_intervals) {
-      subtitle_text <- paste0(sample_text, '\t\t\t\t', 'Observed Coverage: ',
+      subtitle_text <- paste0(sample_text, '\t\t\t', 'Observed Coverage: ',
                               round(contains_true_mean, 2) * 100, '%')
     }
 
