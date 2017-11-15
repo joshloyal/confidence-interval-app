@@ -74,8 +74,13 @@ server <- function(input, output) {
     }
 
     confidence_text <- paste0(input$alpha, "%")
-    sample_text <- paste0("Number of samples per experiment: ", input$n_samples)
-    subtitle_text <- paste0(sample_text, '\n', 'Observed Coverage: ', contains_true_mean)
+    title_text <- paste(confidence_text, "Confidence Intervals", sep = " ")
+    sample_text <- paste0("# of samples per experiment: ", input$n_samples)
+    subtitle_text <- sample_text
+    if (show_intervals) {
+      subtitle_text <- paste0(sample_text, '\t\t\t\t', 'Observed Coverage: ',
+                              round(contains_true_mean, 2) * 100, '%')
+    }
 
     p <- tibble(
       sample_mean = sample_means,
@@ -88,7 +93,7 @@ server <- function(input, output) {
       geom_hline(aes(yintercept = true_mean), linetype = 'dashed', size = 1) +
       scale_y_continuous(limits = c(8, 12)) +
       coord_flip() +
-      ggtitle(paste(confidence_text, "Confidence Intervals", sep = " "), subtitle = subtitle_text) +
+      ggtitle(title_text, subtitle = subtitle_text) +
       loyalr::theme_pub() +
       theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
