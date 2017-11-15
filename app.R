@@ -34,7 +34,12 @@ ui <- fluidPage(
         min = 5,
         max = 100,
         step = 5,
-        value = 95)
+        value = 95),
+      hr(),
+      br(),
+      p('Github Repo: ', a('joshloyal/confidence-interval-app',
+                           href='https://github.com/joshloyal/confidence-interval-app')
+        )
     ),
     column(8,
       plotOutput('IntervalPlot', height = '700px')
