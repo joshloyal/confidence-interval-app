@@ -17,18 +17,21 @@ ui <- fluidPage(
       checkboxInput("show_intervals",
         "Show Confidence Intervals",
         FALSE),
+      checkboxInput("show_true_mean",
+        "Show True Mean",
+        FALSE),
       sliderInput("n_experiments",
         "Number of experiments:",
         min = 10,
         max = 100,
         step = 10,
-        value = 20),
+        value = 10),
       sliderInput("n_samples",
         "Number of samples:",
-        min = 10,
+        min = 5,
         max = 50,
         step = 5,
-        value = 10),
+        value = 5),
       sliderInput("alpha",
         "Confidence Level (alpha):",
         min = 5,
@@ -54,23 +57,25 @@ server <- function(input, output) {
     set.seed(123)
 
     show_intervals <- input$show_intervals
+    show_true_mean <- input$show_true_mean
     n_experiments = input$n_experiments
     n_samples = input$n_samples
     alpha = 1 - (input$alpha / 100)
 
-    true_mean <- 10
-    true_standard_deviation <- 1
+    true_mean <- 121
+    true_sd <- 8
 
     sample_means <- vector('numeric', n_experiments)
     upper_cis <- vector('numeric', n_experiments)
     lower_cis <- vector('numeric', n_experiments)
     contains_true_mean <- 0
     for (i in 1:n_experiments) {
-      sample <- true_standard_deviation * rnorm(n_samples) + true_mean
-      sample_means[i] = mean(sample)
+      sample <- rnorm(n_samples, mean = true_mean, sd = true_sd)
+      sample_means[i] <- mean(sample)
 
-      sample_variance <- var(sample)
-      margin_of_error <- qt(alpha/2, n_samples - 1, lower.tail = FALSE) * sample_variance / sqrt(n_samples)
+      sample_std <- sd(sample)
+      t_value <- qt(alpha/2, df = n_samples - 1, lower.tail = FALSE)
+      margin_of_error <- t_value * (sample_std / sqrt(n_samples))
       upper_cis[i] <- sample_means[i] + margin_of_error
       lower_cis[i] <- sample_means[i] - margin_of_error
       if (true_mean >= lower_cis[i] && true_mean <= upper_cis[i]) {
@@ -80,29 +85,34 @@ server <- function(input, output) {
 
     confidence_text <- paste0(input$alpha, "%")
     title_text <- paste(confidence_text, "Confidence Intervals", sep = " ")
-    sample_text <- paste0("# of samples per experiment: ", input$n_samples)
+    sample_text <- paste0("Number of samples per experiment: ", input$n_samples)
     subtitle_text <- sample_text
     if (show_intervals) {
-      subtitle_text <- paste0(sample_text, '\t\t\t', 'Observed Coverage: ',
+      subtitle_text <- paste0(sample_text, '\n', 'Observed coverage: ',
                               round(contains_true_mean, 2) * 100, '%')
+    } else {
+      subtitle_text <- paste0(sample_text, '\n', 'Observed coverage: N/A')
     }
 
     p <- tibble(
       sample_mean = sample_means,
       upper_ci = upper_cis,
-      lower_ci = lower_cis,
-    ) %>%
+      lower_ci = lower_cis) %>%
       mutate(experiment_number = as.factor(row_number())) %>%
       ggplot(aes(x = experiment_number, y = sample_mean)) +
-      geom_point(size = 3, color = 'steelblue') +
-      geom_hline(aes(yintercept = true_mean), linetype = 'dashed', size = 1) +
-      scale_y_continuous(limits = c(8, 12)) +
-      coord_flip() +
-      ggtitle(title_text, subtitle = subtitle_text) +
-      loyalr::theme_pub() +
-      theme(axis.text.y = element_blank(),
-        axis.ticks.y = element_blank(),
-        axis.line.y = element_blank())
+        geom_point(size = 3, color = 'steelblue') +
+        scale_y_continuous(limits = c(95, 145)) +
+        coord_flip() +
+        ggtitle(title_text, subtitle = subtitle_text) +
+        loyalr::theme_pub() +
+        theme(axis.text.y = element_blank(),
+              axis.ticks.y = element_blank(),
+              axis.line.y = element_blank())
+
+    if (show_true_mean) {
+      p <- p + geom_hline(aes(yintercept = true_mean),
+                          linetype = 'dashed', size = 1)
+    }
 
     if (show_intervals) {
       p <- p +
