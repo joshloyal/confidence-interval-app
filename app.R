@@ -33,7 +33,7 @@ ui <- fluidPage(
         step = 5,
         value = 5),
       sliderInput("alpha",
-        "Confidence Level (alpha):",
+        "Confidence level:",
         min = 5,
         max = 100,
         step = 5,
