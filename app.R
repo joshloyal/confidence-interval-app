@@ -3,7 +3,7 @@ library(ggplot2)
 library(tidyverse)
 library(devtools)
 
-devtools::install_github("joshloyal/loyalr")
+source('themes.R')
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -22,10 +22,10 @@ ui <- fluidPage(
         FALSE),
       sliderInput("n_experiments",
         "Number of experiments:",
-        min = 10,
+        min = 1,
         max = 100,
-        step = 10,
-        value = 10),
+        step = 1,
+        value = 1),
       sliderInput("n_samples",
         "Number of samples:",
         min = 200,
@@ -61,12 +61,12 @@ server <- function(input, output) {
     n_experiments = input$n_experiments
     n_samples = input$n_samples
     alpha = 1 - (input$alpha / 100)
-    
-    # create a synthetic population 
+
+    # create a synthetic population
     n_population <- 100000
     population <- rbernoulli(n_population, p = 0.53)
     true_proportion <- mean(population)
-    
+
 
     sample_props <- vector('numeric', n_experiments)
     upper_cis <- vector('numeric', n_experiments)
@@ -75,16 +75,16 @@ server <- function(input, output) {
     for (i in 1:n_experiments) {
       # sample from the population with replacement.
       sample <- sample(population, n_samples, replace = FALSE)
-      
-      # sample proportion 
+
+      # sample proportion
       sample_prop <- mean(sample)
-      
+
       # margin of error
       sample_std <- (sqrt(sample_prop * (1 - sample_prop)) / sqrt(n_samples))
       z_value <- qnorm(alpha/2, lower.tail = FALSE)
       margin_of_error <- z_value * sample_std
-      
-      # store values 
+
+      # store values
       sample_props[i] <- sample_prop
       upper_cis[i] <- sample_prop + margin_of_error
       lower_cis[i] <- sample_prop - margin_of_error
@@ -114,8 +114,8 @@ server <- function(input, output) {
         scale_y_continuous(limits = c(0, 1)) +
         coord_flip() +
         ggtitle(title_text, subtitle = subtitle_text) +
-        ylab('Sample Proportion') + 
-        xlab('Experiment Number') + 
+        ylab('Sample Proportion') +
+        xlab('Experiment Number') +
         loyalr::theme_pub() +
         theme(axis.text.y = element_blank(),
               axis.ticks.y = element_blank(),
